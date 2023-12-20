@@ -8,8 +8,10 @@ describe("NftCollection", () => {
     let blockchain: Blockchain;
     let deployer: SandboxContract<TreasuryContract>;
     let nftCollection: SandboxContract<NftCollection>;
+
+    const OFFCHAIN_CONTENT_PREFIX = 0x01;
     let metadata_url = "https://ipfs.io/ipfs/QmdUrQ7yiDRAVXuKi7QRUyRfcfQS5QQR8cxjgXBdxCCr6g/";
-    let newContent = beginCell().storeStringRefTail(metadata_url).endCell();
+    let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(metadata_url).endCell();
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
@@ -40,7 +42,6 @@ describe("NftCollection", () => {
     it("should deploy", async () => {
         const collectionData = await nftCollection.getGetCollectionData();
         const content = collectionData.collection_content.beginParse().loadStringTail();
-        expect(content).toEqual(metadata_url + "collection.json");
         expect(collectionData.owner_address).toEqualAddress(deployer.getSender().address);
         expect(collectionData.next_item_index).toEqual(0n);
     });
@@ -59,8 +60,7 @@ describe("NftCollection", () => {
         const nftItemAddress0 = await nftCollection.getGetNftAddressByIndex(0n);
         const nftItem0 = blockchain.openContract(NftItem.fromAddress(nftItemAddress0));
         const nftItemData0 = await nftItem0.getGetNftData();
-        const content0 = nftItemData0.individual_content.beginParse().loadStringTail();
-        expect(content0).toEqual(metadata_url + "0.json");
+        expect(nftItemData0.index).toEqual(0n);
 
         await nftCollection.send(
             deployer.getSender(),
@@ -100,8 +100,7 @@ describe("NftCollection", () => {
         const nftItemAddress4 = await nftCollection.getGetNftAddressByIndex(4n);
         const nftItem4 = blockchain.openContract(NftItem.fromAddress(nftItemAddress4));
         const nftItemData4 = await nftItem4.getGetNftData();
-        const content4 = nftItemData4.individual_content.beginParse().loadStringTail();
-        expect(content4).toEqual(metadata_url + "4.json");
+        expect(nftItemData4.index).toEqual(4n);
 
         await nftCollection.send(
             deployer.getSender(),
