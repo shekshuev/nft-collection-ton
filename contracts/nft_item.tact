@@ -1,44 +1,35 @@
-import "@stdlib/deploy";
-import "@stdlib/ownable";
 import "./messages";
 
-contract NftItem with Deployable, Ownable {
+const minTonsForStorage: Int = ton("0.03");
+const gasConsumption: Int = ton("0.03");
 
-    const minTonsForStorage: Int = ton("0.03");
-    const gasConsumption: Int = ton("0.03");
-
-    owner: Address;
+contract NftItem {
     collection_address: Address;
-    item_index: Int;
+    item_index: Int; 
+    owner: Address;
     individual_content: Cell;
     is_initialized: Bool;
 
-    init(
-        owner: Address,
-        collection_address: Address,
-        item_index: Int,
-        individual_content: Cell
-    ) {
-        self.owner = owner;
+    init(collection_address: Address, item_index: Int, owner: Address, individual_content: Cell){
         self.collection_address = collection_address;
         self.item_index = item_index;
+        self.owner = collection_address;
         self.individual_content = individual_content;
         self.is_initialized = false;
     }
 
-    receive(msg: Transfer) {
-        self.requireOwner();
-        self.owner = msg.new_owner;
-
+    receive(msg: Transfer){
         let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+    
         let msgValue: Int = ctx.value; 
         let tonBalanceBeforeMsg: Int = myBalance() - msgValue;
-        let storageFee: Int = self.minTonsForStorage - min(tonBalanceBeforeMsg, self.minTonsForStorage);
-        msgValue = msgValue - (storageFee + self.gasConsumption);
+        let storageFee: Int = minTonsForStorage - min(tonBalanceBeforeMsg, minTonsForStorage);
+        msgValue = msgValue - (storageFee + gasConsumption);
 
         if (self.is_initialized == false) {
             self.is_initialized = true;
-            
+            self.owner = msg.new_owner;
             send(SendParameters{
                 to: msg.response_destination,
                 value: 0,
@@ -46,6 +37,8 @@ contract NftItem with Deployable, Ownable {
                 body: Excesses { query_id: msg.query_id }.toCell()
             });
         } else {
+            
+            self.owner = msg.new_owner;
             if (msg.forward_amount > 0) {
                 send(SendParameters{
                     to: msg.new_owner,
@@ -59,6 +52,7 @@ contract NftItem with Deployable, Ownable {
                     }.toCell()
                 }); 
             }
+
             msgValue = msgValue - ctx.readForwardFee(); 
             if (msg.response_destination != null) { 
                 send(SendParameters{ 
@@ -68,10 +62,10 @@ contract NftItem with Deployable, Ownable {
                     bounce: true,
                     body: Excesses { query_id: msg.query_id }.toCell()
                 });
-            }
+            } 
         }
     }
-
+    
     receive(msg: GetStaticData){ 
         let ctx: Context = context();
         send(SendParameters {

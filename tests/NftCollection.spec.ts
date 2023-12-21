@@ -10,40 +10,22 @@ describe("NftCollection", () => {
     let nftCollection: SandboxContract<NftCollection>;
 
     const OFFCHAIN_CONTENT_PREFIX = 0x01;
-    let metadata_url = "https://ipfs.io/ipfs/QmdUrQ7yiDRAVXuKi7QRUyRfcfQS5QQR8cxjgXBdxCCr6g/";
+    let metadata_url = "https://gateway.pinata.cloud/ipfs/QmdUrQ7yiDRAVXuKi7QRUyRfcfQS5QQR8cxjgXBdxCCr6g/";
     let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(metadata_url).endCell();
 
     beforeEach(async () => {
         blockchain = await Blockchain.create();
 
-        nftCollection = blockchain.openContract(await NftCollection.fromInit(newContent));
-
         deployer = await blockchain.treasury("deployer");
 
-        const deployResult = await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.05")
-            },
-            {
-                $$type: "Deploy",
-                queryId: 0n
-            }
+        nftCollection = blockchain.openContract(
+            await NftCollection.fromInit(deployer.address, newContent, {
+                $$type: "RoyaltyParams",
+                numerator: 0n,
+                denominator: 1n,
+                destination: deployer.address
+            })
         );
-
-        expect(deployResult.transactions).toHaveTransaction({
-            from: deployer.address,
-            to: nftCollection.address,
-            deploy: true,
-            success: true
-        });
-    });
-
-    it("should deploy", async () => {
-        const collectionData = await nftCollection.getGetCollectionData();
-        const content = collectionData.collection_content.beginParse().loadStringTail();
-        expect(collectionData.owner_address).toEqualAddress(deployer.getSender().address);
-        expect(collectionData.next_item_index).toEqual(0n);
     });
 
     it("should mint nft", async () => {
@@ -58,9 +40,10 @@ describe("NftCollection", () => {
         expect(collectionData.next_item_index).toEqual(1n);
 
         const nftItemAddress0 = await nftCollection.getGetNftAddressByIndex(0n);
-        const nftItem0 = blockchain.openContract(NftItem.fromAddress(nftItemAddress0));
+        const nftItem0 = blockchain.openContract(NftItem.fromAddress(nftItemAddress0!));
         const nftItemData0 = await nftItem0.getGetNftData();
         expect(nftItemData0.index).toEqual(0n);
+        expect(nftItemData0.owner_address).toEqualAddress(deployer.address);
 
         await nftCollection.send(
             deployer.getSender(),
@@ -98,7 +81,7 @@ describe("NftCollection", () => {
         expect(collectionData.next_item_index).toEqual(5n);
 
         const nftItemAddress4 = await nftCollection.getGetNftAddressByIndex(4n);
-        const nftItem4 = blockchain.openContract(NftItem.fromAddress(nftItemAddress4));
+        const nftItem4 = blockchain.openContract(NftItem.fromAddress(nftItemAddress4!));
         const nftItemData4 = await nftItem4.getGetNftData();
         expect(nftItemData4.index).toEqual(4n);
 
@@ -123,13 +106,15 @@ describe("NftCollection", () => {
                 $$type: "Transfer",
                 new_owner: user.address,
                 query_id: 0n,
-                response_destination: user.address,
-                forward_amount: 0n,
                 custom_payload: null,
-                forward_payload: beginCell().endCell()
+                forward_amount: 0n,
+                forward_payload: beginCell().endCell(),
+                response_destination: deployer.address
             }
         );
-        const newOwner = await nftItem4.getOwner();
-        expect(newOwner).toEqualAddress(user.address);
+        const newOwner = await nftItem4.getGetNftData();
+        expect(newOwner.owner_address).toEqualAddress(user.address);
+        console.log(nftItemData4.individual_content.asSlice().loadStringTail());
+        console.log(collectionData.collection_content.asSlice().loadStringTail());
     });
 });

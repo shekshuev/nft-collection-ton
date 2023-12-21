@@ -1,53 +1,65 @@
 import "@stdlib/deploy";
-import "@stdlib/ownable";
 import "./nft_item";
 import "./messages";
 
-contract NftCollection with Deployable, Ownable {
-
-    const minTonForStorage: Int = ton("0.03");
-    const gasConsumption: Int = ton("0.03");
-
-    owner: Address;
+contract NftCollection with Deployable {
     next_item_index: Int as uint32 = 0;
-    collection_content: Cell;
+    owner_address: Address;
+    royalty_params: RoyaltyParams;                      
+    collection_content: Cell;   
 
-    init(collection_content: Cell) {
-        self.owner = sender();
-        self.collection_content = collection_content;
+    init(owner_address: Address, collection_content: Cell, royalty_params: RoyaltyParams){
+        self.owner_address = owner_address;
+        self.collection_content = collection_content; 
+        self.royalty_params = royalty_params;
     }
 
-    receive("Mint") {
-        self.requireOwner();
-        self.mint(sender());
-    }
-
-    fun mint(receiver: Address) {
-        require(self.next_item_index >= 0, "non-sequential NFTs");
-        require(self.next_item_index < 5, "all NFTs are minted");
-        let nft_init: StateInit = self.getNftItemInit(self.next_item_index);
-        let msgValue: Int = context().value;
+    receive("Mint"){
+        let ctx: Context = context(); 
+        let msgValue: Int = ctx.value;
         let tonBalanceBeforeMsg: Int = myBalance() - msgValue;
-        let storageFee: Int = self.minTonForStorage - min(tonBalanceBeforeMsg, self.minTonForStorage);
-        msgValue = msgValue - (storageFee + self.gasConsumption);
+        let storageFee: Int = minTonsForStorage - min(tonBalanceBeforeMsg, minTonsForStorage);
+        msgValue = msgValue - (storageFee + gasConsumption);
+        self.mint(ctx.sender, msgValue);
+    }
 
-        send(SendParameters {
-            to: contractAddress(nft_init),
-            value: msgValue,
-            mode: SendIgnoreErrors,
-            bounce: false,
-            body: Transfer {
-                query_id: 0,
-                new_owner: receiver,
-                response_destination: self.owner,
-                custom_payload: emptyCell(),
-                forward_amount: 0,
-                forward_payload: emptySlice()
-            }.toCell(),
-            code: nft_init.code,
-            data: nft_init.data
-        });
+    fun mint(sender: Address, msgValue: Int) {
+        require(self.next_item_index >= 0, "non-sequential NFTs");
+        require(self.next_item_index < 5, "too many NFTs");
+        let nft_init: StateInit = self.getNftItemInit(self.next_item_index);
+        send(SendParameters{
+                to: contractAddress(nft_init), 
+                value: msgValue, 
+                bounce: false,
+                mode: SendIgnoreErrors,
+                body: Transfer {
+                    query_id: 0,
+                    new_owner: sender,
+                    response_destination: self.owner_address,
+                    custom_payload: emptyCell(),
+                    forward_amount: 0,
+                    forward_payload: emptySlice()
+                }.toCell(),
+                code: nft_init.code,
+                data: nft_init.data
+            });
         self.next_item_index = self.next_item_index + 1;
+    }
+
+    receive(msg: GetRoyaltyParams) {   
+        let ctx: Context = context(); 
+        send(SendParameters{
+            to: ctx.sender,
+            value: 0,
+            mode: 64, 
+            bounce: false,
+            body: ReportRoyaltyParams {
+                query_id: msg.query_id,
+                numerator:  self.royalty_params.numerator,
+                denominator: self.royalty_params.denominator,
+                destination: self.owner_address
+            }.toCell()
+        });        
     }
 
     get fun get_collection_data(): CollectionData {     
@@ -58,27 +70,27 @@ contract NftCollection with Deployable, Ownable {
         return CollectionData{
             next_item_index: self.next_item_index, 
             collection_content: b.toCell(), 
-            owner_address: self.owner
+            owner_address: self.owner_address
         };
     }
 
-    get fun get_nft_address_by_index(item_index: Int): Address {
-        return contractAddress(self.getNftItemInit(item_index));
+    get fun get_nft_address_by_index(item_index: Int): Address?{      
+        let initCode: StateInit = self.getNftItemInit(item_index);
+        return contractAddress(initCode);
     }
 
     get fun getNftItemInit(item_index: Int): StateInit {
-        return initOf NftItem(self.owner, myAddress(), item_index, self.collection_content);
+        return initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content);
     }
-
+    
     get fun get_nft_content(index: Int, individual_content: Cell): Cell { 
         let b: StringBuilder = beginString();
         let ic: String = individual_content.asSlice().asString();
         b.append(ic);
         return b.toCell();
     }
-    
 
-    
-
-    
+    get fun royalty_params(): RoyaltyParams {
+        return self.royalty_params;
+    }
 }
