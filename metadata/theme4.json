@@ -1,0 +1,24 @@
+{
+    "name": "Theme #4 NFT",
+    "description": "NFT reward for the best students of the database course in theme 'PL/pgSQL language'",
+    "image": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/theme4.png",
+    "content_url": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/theme4.png",
+    "attributes": [
+        {
+            "trait_type": "Term",
+            "value": "Spring 2024"
+        },
+        {
+            "trait_type": "Place",
+            "value": "Oryol, Russia"
+        },
+        {
+            "trait_type": "Course",
+            "value": "Databases"
+        },
+        {
+            "trait_type": "Theme",
+            "value": "PL/pgSQL language"
+        }
+    ]
+}

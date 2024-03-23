@@ -1,0 +1,20 @@
+{
+    "name": "Graduation NFT",
+    "description": "NFT reward for the best students of the full database course, who successfully passed the last one",
+    "image": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/graduation.png",
+    "content_url": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/graduation.png",
+    "attributes": [
+        {
+            "trait_type": "Term",
+            "value": "Spring 2024"
+        },
+        {
+            "trait_type": "Place",
+            "value": "Oryol, Russia"
+        },
+        {
+            "trait_type": "Course",
+            "value": "Databases"
+        }
+    ]
+}

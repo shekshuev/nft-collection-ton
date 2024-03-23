@@ -85,9 +85,12 @@ contract NftItem {
         let b: StringBuilder = beginString();
         let collectionData: String = self.individual_content.asSlice().asString();
         b.append(collectionData);
-        b.append(self.item_index.toString());
-        b.append(".json");
-
+        if (self.item_index == 6) {
+            b.append("graduation.json");
+        } else {
+            b.append(self.item_index.toString());
+            b.append(".json");
+        }
         return GetNftData {
             is_initialized: self.is_initialized, 
             index: self.item_index, 

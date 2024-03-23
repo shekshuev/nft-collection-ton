@@ -10,7 +10,7 @@ describe("NftCollection", () => {
     let nftCollection: SandboxContract<NftCollection>;
 
     const OFFCHAIN_CONTENT_PREFIX = 0x01;
-    let metadata_url = "https://gateway.pinata.cloud/ipfs/QmdUrQ7yiDRAVXuKi7QRUyRfcfQS5QQR8cxjgXBdxCCr6g/";
+    let metadata_url = "https://ipfs.io/ipfs/QmcbxymUgsFt5db5dyf5JfJZAdYvA2rYzpYnhD5p4BCskd/";
     let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(metadata_url).endCell();
 
     beforeEach(async () => {
@@ -77,8 +77,16 @@ describe("NftCollection", () => {
             "Mint"
         );
 
+        await nftCollection.send(
+            deployer.getSender(),
+            {
+                value: toNano("0.3")
+            },
+            "Mint"
+        );
+
         collectionData = await nftCollection.getGetCollectionData();
-        expect(collectionData.next_item_index).toEqual(5n);
+        expect(collectionData.next_item_index).toEqual(6n);
 
         const nftItemAddress4 = await nftCollection.getGetNftAddressByIndex(4n);
         const nftItem4 = blockchain.openContract(NftItem.fromAddress(nftItemAddress4!));
