@@ -28,84 +28,37 @@ describe("NftCollection", () => {
         );
     });
 
-    it("should mint nft", async () => {
+    it("should mint nft, set code and sent it", async () => {
         await nftCollection.send(
             deployer.getSender(),
             {
                 value: toNano("0.3")
             },
-            "Mint"
+            "mint"
         );
-        let collectionData = await nftCollection.getGetCollectionData();
-        expect(collectionData.next_item_index).toEqual(1n);
+        const nftItemAddress = await nftCollection.getGetNftAddressByIndex(1n);
+        const nftItem = blockchain.openContract(NftItem.fromAddress(nftItemAddress!));
+        const nftItemData = await nftItem.getGetNftData();
+        expect(nftItemData.index).toEqual(1n);
+        expect(nftItemData.owner_address).toEqualAddress(deployer.address);
+        const metadataUrl = nftItemData.individual_content.asSlice().loadStringTail();
+        expect(metadataUrl).toMatch(/.*(graduation.json)$/);
 
-        const nftItemAddress0 = await nftCollection.getGetNftAddressByIndex(0n);
-        const nftItem0 = blockchain.openContract(NftItem.fromAddress(nftItemAddress0!));
-        const nftItemData0 = await nftItem0.getGetNftData();
-        expect(nftItemData0.index).toEqual(0n);
-        expect(nftItemData0.owner_address).toEqualAddress(deployer.address);
-
-        await nftCollection.send(
+        await nftItem.send(
             deployer.getSender(),
             {
                 value: toNano("0.3")
             },
-            "Mint"
+            "theme1"
         );
-
-        await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.3")
-            },
-            "Mint"
-        );
-
-        await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.3")
-            },
-            "Mint"
-        );
-
-        await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.3")
-            },
-            "Mint"
-        );
-
-        await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.3")
-            },
-            "Mint"
-        );
-
-        collectionData = await nftCollection.getGetCollectionData();
-        expect(collectionData.next_item_index).toEqual(6n);
-
-        const nftItemAddress4 = await nftCollection.getGetNftAddressByIndex(4n);
-        const nftItem4 = blockchain.openContract(NftItem.fromAddress(nftItemAddress4!));
-        const nftItemData4 = await nftItem4.getGetNftData();
-        expect(nftItemData4.index).toEqual(4n);
-
-        await nftCollection.send(
-            deployer.getSender(),
-            {
-                value: toNano("0.3")
-            },
-            "Mint"
-        );
-
-        collectionData = await nftCollection.getGetCollectionData();
-        expect(collectionData.next_item_index).toEqual(5n);
+        const nftItemChangedData = await nftItem.getGetNftData();
+        expect(nftItemChangedData.index).toEqual(1n);
+        expect(nftItemChangedData.owner_address).toEqualAddress(deployer.address);
+        const changedMetadataUrl = nftItemChangedData.individual_content.asSlice().loadStringTail();
+        expect(changedMetadataUrl).toMatch(/.*(theme1.json)$/);
 
         const user = await blockchain.treasury("user");
-        await nftItem4.send(
+        await nftItem.send(
             deployer.getSender(),
             {
                 value: toNano("0.3")
@@ -120,9 +73,10 @@ describe("NftCollection", () => {
                 response_destination: deployer.address
             }
         );
-        const newOwner = await nftItem4.getGetNftData();
+        const newOwner = await nftItem.getGetNftData();
+        const newOwnerNftItemData = await nftItem.getGetNftData();
         expect(newOwner.owner_address).toEqualAddress(user.address);
-        console.log(nftItemData4.individual_content.asSlice().loadStringTail());
-        console.log(collectionData.collection_content.asSlice().loadStringTail());
+        const userMetadataUrl = newOwnerNftItemData.individual_content.asSlice().loadStringTail();
+        expect(userMetadataUrl).toMatch(/.*(theme1.json)$/);
     });
 });

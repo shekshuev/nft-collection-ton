@@ -6,9 +6,11 @@ const gasConsumption: Int = ton("0.03");
 contract NftItem {
     collection_address: Address;
     item_index: Int; 
+    item_code: Int;
     owner: Address;
     individual_content: Cell;
     is_initialized: Bool;
+    is_code_set: Bool;
 
     init(collection_address: Address, item_index: Int, owner: Address, individual_content: Cell){
         self.collection_address = collection_address;
@@ -16,6 +18,62 @@ contract NftItem {
         self.owner = collection_address;
         self.individual_content = individual_content;
         self.is_initialized = false;
+        self.is_code_set = false;
+        self.item_code = 0;
+    }
+
+    receive("theme1") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 1;
+            self.is_code_set = true;
+        }
+    }
+
+    receive("theme2") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 2;
+            self.is_code_set = true;
+        }
+    }
+
+    receive("theme3") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 3;
+            self.is_code_set = true;
+        }
+    }
+
+    receive("theme4") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 4;
+            self.is_code_set = true;
+        }
+    }
+
+    receive("theme5") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 5;
+            self.is_code_set = true;
+        }
+    }
+
+    receive("graduation") {
+        let ctx: Context = context();
+        require(ctx.sender == self.owner, "not owner");
+        if (!self.is_code_set) {
+            self.item_code = 0;
+            self.is_code_set = true;
+        }
     }
 
     receive(msg: Transfer){
@@ -85,10 +143,11 @@ contract NftItem {
         let b: StringBuilder = beginString();
         let collectionData: String = self.individual_content.asSlice().asString();
         b.append(collectionData);
-        if (self.item_index == 6) {
+        if (self.item_code == 0) {
             b.append("graduation.json");
         } else {
-            b.append(self.item_index.toString());
+            b.append("theme");
+            b.append(self.item_code.toString());
             b.append(".json");
         }
         return GetNftData {

@@ -14,19 +14,14 @@ contract NftCollection with Deployable {
         self.royalty_params = royalty_params;
     }
 
-    receive("Mint"){
+    receive("mint") {
         let ctx: Context = context(); 
+        require(ctx.sender == self.owner_address, "not owner");
         let msgValue: Int = ctx.value;
         let tonBalanceBeforeMsg: Int = myBalance() - msgValue;
         let storageFee: Int = minTonsForStorage - min(tonBalanceBeforeMsg, minTonsForStorage);
         msgValue = msgValue - (storageFee + gasConsumption);
-        self.mint(ctx.sender, msgValue);
-    }
-
-    fun mint(sender: Address, msgValue: Int) {
-        require(self.next_item_index >= 0, "non-sequential NFTs");
-        require(self.next_item_index < 5, "too many NFTs");
-        let nft_init: StateInit = self.getNftItemInit(self.next_item_index);
+        let nft_init: StateInit = initOf NftItem(myAddress(), self.next_item_index, self.owner_address, self.collection_content);
         send(SendParameters{
                 to: contractAddress(nft_init), 
                 value: msgValue, 
@@ -34,7 +29,7 @@ contract NftCollection with Deployable {
                 mode: SendIgnoreErrors,
                 body: Transfer {
                     query_id: 0,
-                    new_owner: sender,
+                    new_owner: ctx.sender,
                     response_destination: self.owner_address,
                     custom_payload: emptyCell(),
                     forward_amount: 0,
@@ -75,12 +70,8 @@ contract NftCollection with Deployable {
     }
 
     get fun get_nft_address_by_index(item_index: Int): Address?{      
-        let initCode: StateInit = self.getNftItemInit(item_index);
+        let initCode: StateInit = initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content);
         return contractAddress(initCode);
-    }
-
-    get fun getNftItemInit(item_index: Int): StateInit {
-        return initOf NftItem(myAddress(), item_index, self.owner_address, self.collection_content);
     }
     
     get fun get_nft_content(index: Int, individual_content: Cell): Cell { 
