@@ -10,7 +10,7 @@ describe("NftCollection", () => {
     let nftCollection: SandboxContract<NftCollection>;
 
     const OFFCHAIN_CONTENT_PREFIX = 0x01;
-    let metadata_url = "https://ipfs.io/ipfs/QmcbxymUgsFt5db5dyf5JfJZAdYvA2rYzpYnhD5p4BCskd/";
+    let metadata_url = "https://ipfs.io/ipfs/QmZn1jT2z8LgW8gydXYQSy7P1Ty4WsgfU286TTThKJT9jc/";
     let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(metadata_url).endCell();
 
     beforeEach(async () => {
@@ -36,10 +36,10 @@ describe("NftCollection", () => {
             },
             "mint"
         );
-        const nftItemAddress = await nftCollection.getGetNftAddressByIndex(1n);
+        const nftItemAddress = await nftCollection.getGetNftAddressByIndex(0n);
         const nftItem = blockchain.openContract(NftItem.fromAddress(nftItemAddress!));
         const nftItemData = await nftItem.getGetNftData();
-        expect(nftItemData.index).toEqual(1n);
+        expect(nftItemData.index).toEqual(0n);
         expect(nftItemData.owner_address).toEqualAddress(deployer.address);
         const metadataUrl = nftItemData.individual_content.asSlice().loadStringTail();
         expect(metadataUrl).toMatch(/.*(graduation.json)$/);
@@ -52,7 +52,7 @@ describe("NftCollection", () => {
             "theme1"
         );
         const nftItemChangedData = await nftItem.getGetNftData();
-        expect(nftItemChangedData.index).toEqual(1n);
+        expect(nftItemChangedData.index).toEqual(0n);
         expect(nftItemChangedData.owner_address).toEqualAddress(deployer.address);
         const changedMetadataUrl = nftItemChangedData.individual_content.asSlice().loadStringTail();
         expect(changedMetadataUrl).toMatch(/.*(theme1.json)$/);

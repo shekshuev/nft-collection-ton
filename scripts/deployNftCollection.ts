@@ -4,7 +4,7 @@ import { NetworkProvider } from "@ton/blueprint";
 
 export async function run(provider: NetworkProvider) {
     const OFFCHAIN_CONTENT_PREFIX = 0x01;
-    let metadata_url = "https://ipfs.io/ipfs/QmcbxymUgsFt5db5dyf5JfJZAdYvA2rYzpYnhD5p4BCskd/";
+    let metadata_url = "https://ipfs.io/ipfs/QmZn1jT2z8LgW8gydXYQSy7P1Ty4WsgfU286TTThKJT9jc/";
     let newContent = beginCell().storeInt(OFFCHAIN_CONTENT_PREFIX, 8).storeStringRefTail(metadata_url).endCell();
     const nftCollection = provider.open(
         await NftCollection.fromInit(provider.sender().address!, newContent, {
@@ -18,7 +18,7 @@ export async function run(provider: NetworkProvider) {
     await nftCollection.send(
         provider.sender(),
         {
-            value: toNano("0.05")
+            value: toNano("0.1")
         },
         {
             $$type: "Deploy",
@@ -26,13 +26,15 @@ export async function run(provider: NetworkProvider) {
         }
     );
 
-    // await nftCollection.send(
-    //     provider.sender(),
-    //     {
-    //         value: toNano("0.3")
-    //     },
-    //     "mint"
-    // );
+    for (let i = 0; i < 3; i++) {
+        await nftCollection.send(
+            provider.sender(),
+            {
+                value: toNano("0.5")
+            },
+            "mint"
+        );
+    }
 
     await provider.waitForDeploy(nftCollection.address);
 }

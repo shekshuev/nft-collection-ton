@@ -1,8 +1,8 @@
 {
     "name": "Theme #1 NFT",
     "description": "NFT reward for the best students of the database course in theme 'Relational databases essentials'",
-    "image": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/theme1.png",
-    "content_url": "https://ipfs.io/ipfs/QmQvoCxRP17Gneb2G85u8k3vBRQAuiZcCaKHrGiceVNv1k/theme1.png",
+    "image": "https://ipfs.io/ipfs/QmQKMWTLvD9gCuFWwD4jMTVcDN91p1wdk2ZpUV4BPhnYgb/theme1.png",
+    "content_url": "https://ipfs.io/ipfs/QmQKMWTLvD9gCuFWwD4jMTVcDN91p1wdk2ZpUV4BPhnYgb/theme1.png",
     "attributes": [
         {
             "trait_type": "Term",

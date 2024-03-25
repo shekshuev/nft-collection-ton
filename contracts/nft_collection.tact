@@ -3,7 +3,7 @@ import "./nft_item";
 import "./messages";
 
 contract NftCollection with Deployable {
-    next_item_index: Int as uint32 = 1;
+    next_item_index: Int as uint32 = 0;
     owner_address: Address;
     royalty_params: RoyaltyParams;                      
     collection_content: Cell;   
